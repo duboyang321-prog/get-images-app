@@ -1,6 +1,7 @@
 import { apiKey } from "@better-auth/api-key";
 import { polar, checkout, webhooks } from "@polar-sh/better-auth";
 import { betterAuth } from "better-auth";
+import { APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin as adminPlugin } from "better-auth/plugins/admin";
 import { eq } from "drizzle-orm";
@@ -18,6 +19,17 @@ const baseURL =
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+function isInternalUserEmail(email: string): boolean {
+  const allowedEmails = new Set(
+    (process.env.INTERNAL_USER_EMAILS ?? "")
+      .split(",")
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean),
+  );
+
+  return allowedEmails.has(email.trim().toLowerCase());
+}
 
 export const auth = betterAuth({
   baseURL,
@@ -56,7 +68,8 @@ export const auth = betterAuth({
     },
   },
   emailVerification: {
-    sendOnSignUp: true,
+    // Invite-only deployment: do not require an email provider at sign-up.
+    sendOnSignUp: false,
     sendVerificationEmail: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
@@ -71,6 +84,11 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (u) => {
+          if (!isInternalUserEmail(u.email)) {
+            throw new APIError("FORBIDDEN", {
+              message: "This site is invite-only. Ask the administrator for access.",
+            });
+          }
           if (isBootstrapAdminEmail(u.email)) {
             return { data: { ...u, role: "admin" } };
           }
