@@ -20,6 +20,11 @@ const baseURL =
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
+const polarConfigured =
+  Boolean(process.env.POLAR_ACCESS_TOKEN) &&
+  Boolean(process.env.POLAR_WEBHOOK_SECRET) &&
+  CREDIT_PACKS.every((pack) => Boolean(pack.productId));
+
 function isInternalUserEmail(email: string): boolean {
   const allowedEmails = new Set(
     [process.env.ADMIN_EMAILS, process.env.INTERNAL_USER_EMAILS]
@@ -138,43 +143,45 @@ export const auth = betterAuth({
       },
     }),
     adminPlugin(),
-    polar({
-      client: polarClient,
-      createCustomerOnSignUp: true,
-      use: [
-        checkout({
-          products: CREDIT_PACKS.map((p) => ({ productId: p.productId, slug: p.slug })),
-          successUrl: "/dashboard",
-          authenticatedUsersOnly: true,
-        }),
-        webhooks({
-          secret: process.env.POLAR_WEBHOOK_SECRET!,
-          onOrderPaid: async (payload) => {
-            const userId = payload.data.customer.externalId;
-            if (!userId) {
-              console.error("Polar webhook: missing externalId on customer");
-              return;
-            }
-            const productId = payload.data.product?.id;
-            if (!productId) {
-              console.error("Polar webhook: missing product on order");
-              return;
-            }
-            const credits = getProductCredits(productId);
-            if (!credits) {
-              console.error(`Polar webhook: unknown product ${productId}`);
-              return;
-            }
-            const orderId = payload.data.id;
-            await addCredits(
-              userId,
-              credits,
-              `Purchased ${credits} credits (Order ${orderId})`,
-              orderId
-            );
-          },
-        }),
-      ],
-    }),
+    ...(polarConfigured ? [
+      polar({
+            client: polarClient,
+            createCustomerOnSignUp: true,
+            use: [
+              checkout({
+                products: CREDIT_PACKS.map((p) => ({ productId: p.productId, slug: p.slug })),
+                successUrl: "/dashboard",
+                authenticatedUsersOnly: true,
+              }),
+              webhooks({
+                secret: process.env.POLAR_WEBHOOK_SECRET!,
+                onOrderPaid: async (payload) => {
+                  const userId = payload.data.customer.externalId;
+                  if (!userId) {
+                    console.error("Polar webhook: missing externalId on customer");
+                    return;
+                  }
+                  const productId = payload.data.product?.id;
+                  if (!productId) {
+                    console.error("Polar webhook: missing product on order");
+                    return;
+                  }
+                  const credits = getProductCredits(productId);
+                  if (!credits) {
+                    console.error(`Polar webhook: unknown product ${productId}`);
+                    return;
+                  }
+                  const orderId = payload.data.id;
+                  await addCredits(
+                    userId,
+                    credits,
+                    `Purchased ${credits} credits (Order ${orderId})`,
+                    orderId
+                  );
+                },
+              }),
+            ],
+          }),
+    ] : []),
   ],
 });
