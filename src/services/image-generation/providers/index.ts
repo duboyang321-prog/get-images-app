@@ -10,7 +10,10 @@ const PROVIDER_ENV_KEYS: Record<ProviderId, string> = {
 
 export function getApiKey(providerId: ProviderId): string {
   const envKey = PROVIDER_ENV_KEYS[providerId];
-  const key = process.env[envKey];
+  const key =
+    providerId === "openai"
+      ? process.env.OPENAI_API_KEY
+      : process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!key) {
     throw new ConfigError(
       `Missing API key for ${providerId}. Set the ${envKey} environment variable.`,
