@@ -38,6 +38,8 @@ export function isKnownGenerationError(error: unknown): error is Error {
   return (
     (typeof code === "string" &&
       (code === "VALIDATION_ERROR" ||
+        code === "CONFIG_ERROR" ||
+        code === "PROVIDER_ERROR" ||
         code === "INSUFFICIENT_CREDITS" ||
         code === "CREDIT_ERROR" ||
         code === "USER_ERROR")) ||
