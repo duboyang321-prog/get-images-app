@@ -9,11 +9,6 @@ import type {
   ThinkingSupport,
 } from "./types";
 
-const PROVIDER_ENV_KEYS: Record<string, string> = {
-  openai: "OPENAI_API_KEY",
-  google: "GOOGLE_GENERATIVE_AI_API_KEY",
-};
-
 type ModelRow = typeof modelTable.$inferSelect;
 
 function isThinkingDefault(v: string | null): v is "minimal" | "low" {
@@ -46,8 +41,13 @@ function rowToDefinition(row: ModelRow): ImageModelDefinition {
 }
 
 function filterByConfiguredProvider(def: ImageModelDefinition): boolean {
-  const envKey = PROVIDER_ENV_KEYS[def.providerId];
-  return envKey ? Boolean(process.env[envKey]) : false;
+  // Use explicit environment-variable access so Next.js/Vercel can reliably
+  // detect and expose each credential during the production build/runtime.
+  if (def.providerId === "openai") return Boolean(process.env.OPENAI_API_KEY);
+  if (def.providerId === "google") {
+    return Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY);
+  }
+  return false;
 }
 
 /**
