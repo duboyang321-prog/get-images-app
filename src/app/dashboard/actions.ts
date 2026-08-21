@@ -82,9 +82,32 @@ export async function generateImageAction(
 }
 
 export async function getAvailableModelsAction(): Promise<ImageModelDefinition[]> {
-  // The admin registry is the source of truth for what appears in the picker.
-  // Provider credentials are validated only when a generation is requested.
-  return await listModels();
+  // This private deployment uses two TokenByte model-group keys. Only expose
+  // the exact models those groups can route so users cannot select an active
+  // registry entry that TokenByte does not provide.
+  const tokenByteModelIds = new Set([
+    "openai:gpt-image-2",
+    "gemini-3-pro-image",
+  ]);
+  const models = (await listModels()).filter((model) =>
+    tokenByteModelIds.has(model.id),
+  );
+  const tokenByteAspectRatios = new Set(["1:1", "3:2", "2:3"]);
+
+  // TokenByte's OpenAI-compatible image endpoint does not expose Gemini's
+  // provider-specific thinking toggle. Hide it to avoid charging the deep
+  // rate for a parameter that would not be sent. Also advertise only the
+  // ratios represented exactly by the endpoint's supported pixel sizes.
+  return models.map((model) => ({
+    id: model.id,
+    providerId: model.providerId,
+    modelId: model.modelId,
+    name: model.name,
+    description: model.description,
+    aspectRatios: model.aspectRatios.filter((ratio) =>
+      tokenByteAspectRatios.has(ratio),
+    ),
+  }));
 }
 
 export type LibraryImage = {
