@@ -74,9 +74,9 @@ export const DEFAULT_MODELS: DefaultModelSeed[] = [
     sortOrder: 30,
   },
   {
-    modelId: "google:gemini-3.1-flash-image-preview",
+    modelId: "google:gemini-3.1-flash-image",
     providerId: "google",
-    providerModelId: "gemini-3.1-flash-image-preview",
+    providerModelId: "gemini-3.1-flash-image",
     name: "Nano Banana 2",
     description: "Improved quality and coherence. Optional deeper thinking.",
     aspectRatios: COMMON_RATIOS,
@@ -87,9 +87,9 @@ export const DEFAULT_MODELS: DefaultModelSeed[] = [
     sortOrder: 40,
   },
   {
-    modelId: "google:gemini-3-pro-image-preview",
+    modelId: "gemini-3-pro-image",
     providerId: "google",
-    providerModelId: "gemini-3-pro-image-preview",
+    providerModelId: "gemini-3-pro-image",
     name: "Nano Banana Pro",
     description: "Top-tier Gemini output. Excellent text and complex scenes.",
     aspectRatios: [...COMMON_RATIOS, "21:9"],
