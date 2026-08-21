@@ -89,7 +89,7 @@ export const DEFAULT_MODELS: DefaultModelSeed[] = [
   {
     modelId: "gemini-3-pro-image",
     providerId: "google",
-    providerModelId: "gemini-3-pro-image",
+    providerModelId: "gemini-3-pro-image-preview",
     name: "Nano Banana Pro",
     description: "Top-tier Gemini output. Excellent text and complex scenes.",
     aspectRatios: [...COMMON_RATIOS, "21:9"],
