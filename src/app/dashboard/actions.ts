@@ -82,7 +82,9 @@ export async function generateImageAction(
 }
 
 export async function getAvailableModelsAction(): Promise<ImageModelDefinition[]> {
-  return await listModels({ onlyConfigured: true });
+  // The admin registry is the source of truth for what appears in the picker.
+  // Provider credentials are validated only when a generation is requested.
+  return await listModels();
 }
 
 export type LibraryImage = {
