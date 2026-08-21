@@ -22,7 +22,9 @@ const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
 function isInternalUserEmail(email: string): boolean {
   const allowedEmails = new Set(
-    (process.env.INTERNAL_USER_EMAILS ?? "")
+    [process.env.ADMIN_EMAILS, process.env.INTERNAL_USER_EMAILS]
+      .filter(Boolean)
+      .join(",")
       .split(",")
       .map((value) => value.trim().toLowerCase())
       .filter(Boolean),
